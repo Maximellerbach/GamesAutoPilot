@@ -1,19 +1,38 @@
-import cv2 
-import time
+import cv2
+import d3dshot
+import numpy as np
 
-name = 'F:\\Forza Horizon 3 30_01_2019 15_08_40.mp4'
+import interface
+import vjoy
 
-cap = cv2.VideoCapture(name)
-i = 0
 
-while(1): 
-    ret, frame = cap.read()
-    
-    '''
-    cv2.imshow('img',frame)
-    cv2.waitKey(1)
-    '''
-    frame = cv2.resize(frame,(160,90))
-    print(i)
-    i+=1
-    cv2.imwrite('extract\\'+str(time.time())+'.png',frame)
+def extract_loop(bbox, capture):
+    raw = capture.screenshot(region=bbox)
+
+    raw = cv2.cvtColor(raw, cv2.COLOR_RGB2BGR)/255
+    img = cv2.resize(raw, (320,240))
+    img = img[100:, :, :]
+    img = cv2.resize(img, (160,120))
+
+
+    for i in range(pygame.joystick.get_count()):
+        joystick = pygame.joystick.Joystick(i)
+        joystick.init()
+
+        pygame.event.pump()
+
+        name = joystick.get_name()
+        axes = joystick.get_numaxes()
+        for y in range(2):
+            axis = joystick.get_axis(y)
+
+            print(name, axes, axis)
+
+    # cv2.imwrite('extracted_img\\'+str(dire)+'_'+str(time.time())+'.png', img*255)
+
+d = d3dshot.create(capture_output="numpy")
+pygame.init()
+
+bbox = (0,33,514,421)
+while(1):
+    extract_loop(bbox, d)

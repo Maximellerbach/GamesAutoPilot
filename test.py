@@ -13,7 +13,7 @@ from keras.models import load_model
 import keras.backend as K
 
 import interface
-import vjoy
+import pyvjoy
 pyautogui.FAILSAFE = False
 
 
@@ -74,16 +74,15 @@ dt = 0
 prev = 0
 
 d = d3dshot.create(capture_output="numpy")
-
 canvas = interface.ui(name="autonomous_driving")
 
-# joy = joy_keyboard()
-# joy_t = threading.Thread(target=joy.iterate)
-# joy_t.start()
+# j = joy_keyboard()
+# t = threading.Thread(target=j.iterate())
+# t.start()
 
-vj = vjoy.vJoy()
-vj.close()
-vj.open()
+vj = pyvjoy.VJoyDevice(1)
+vj.data.wAxisX = int(32767/2)
+vj.data.wAxisY = int(32767/2)
 
 while(1):
     st = time.time()
@@ -107,7 +106,7 @@ while(1):
         del av[0]
 
     # dire = np.average(av)
-    dire = average
+    dire = average/2
 
     c = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
@@ -117,12 +116,13 @@ while(1):
     et = time.time()
     dt = et-st
     
-    # joy_t.join()
-    # joy.get_key(dire, prev, dt)
-    # joy_t = threading.Thread(target=joy.iterate)
-    # joy_t.start()
-
-    vjoy.setJoy(vj, dire, 0)
-    cv2.imwrite('test_img\\'+str(dire)+'_'+str(time.time())+'.png', img*255)
-
-vj.close()
+    # t.join()
+    # j.get_key(dire, prev, dt)
+    # t = threading.Thread(target=j.iterate())
+    # t.start()
+    # prev = dire
+    
+    vj.data.wAxisX = int(32767*(dire+1)/2)
+    vj.update()
+    
+    # cv2.imwrite('test_img\\'+str(dire)+'_'+str(time.time())+'.png', img*255)
