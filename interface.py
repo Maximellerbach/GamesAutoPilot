@@ -5,11 +5,11 @@ class ui():
     def __init__(self, name="img", dt=1):
         self.name = name
         self.dt = dt
+        self.stacks = [(0, 0, 0, 0)]
 
-    def update(self, screens=[np.zeros((512,512))], size=(512,512), stackx=True):
+    def stack(self, screens=[np.zeros((512,512))], stackx=True):
         self.screens = screens
         self.n_screens = len(screens)
-        self.size = size
 
         xmax = []
         ymax = []
@@ -27,6 +27,7 @@ class ui():
         for s in self.screens:
             dim = s.shape
             img[:dim[0], offx:offx+dim[1], :] = s
+            self.stacks.append((0, dim[0], offx, offx+dim[1]))
 
             if stackx == True:
                 offx += dim[1]

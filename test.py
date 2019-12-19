@@ -7,8 +7,11 @@ import time
 
 import cv2
 import d3dshot
+from PIL import ImageGrab, Image
+import mss
 import numpy as np
 import pyautogui
+import keyboard
 from keras.models import load_model
 import keras.backend as K
 
@@ -20,41 +23,31 @@ pyautogui.FAILSAFE = False
 class joy_keyboard():
     def __init__(self):
         self.i = 0
-        self.kdict = ['q', 'd', 'z', 's', '']
+        self.kdict = ['q', 'r', 'z', 's']
         self.k = self.kdict[-1]
         self.idt = 1/30
         self.dt = self.idt
         self.pred = 0
 
     def iterate(self):
-        pyautogui.keyDown(self.k)
-        time.sleep(self.dt)
-        pyautogui.keyUp(self.k)
-        self.i -= 1
+        pyautogui.press(self.k)
 
     def get_key(self, direct, prev, dt):
-        
         if prev>0:
-            kp = 'd'
+            kp = self.kdict[1]
         elif prev<0:
-            kp = 'q'
+            kp = self.kdict[0]
         else:
-            kp = ''
+            kp = self.kdict[-1]
 
         if direct>0:
-            self.k = 'd'
+            self.k = self.kdict[1]
         elif direct<0:
-            self.k = 'q'
+            self.k = self.kdict[0]
         else:
-            self.k = ''
+            self.k = self.kdict[-1]
 
-        if kp != self.k:
-            self.i += 1
-            pyautogui.keyUp(kp)
-        else:
-            self.i += 1
-        
-        self.dt = np.absolute(direct)*dt
+        # self.dt = np.absolute(direct)*dt
         # self.i = int(np.absolute(direct)*10)
         
 
@@ -62,6 +55,16 @@ def dir_loss(y_true, y_pred):
     # return K.sqrt(K.square(y_true-y_pred))
     return K.sqrt(K.square(y_true-y_pred))
 
+class joy_controller():
+    def __init__(self, n):
+        self.vjoyobj = pyvjoy.VJoyDevice(n)
+        self.vjoyobj.data.wAxisX = int(32767/2)
+        self.vjoyobj.data.wAxisY = int(32767/2)
+
+    def iterate(self, dire):
+        self.vjoyobj.data.wAxisX = int(32767*(dire+1)/2)
+        self.vjoyobj.update()
+        
 
 last = 1
 av = []
@@ -73,56 +76,55 @@ x = [0,0,0,0,0]
 dt = 0
 prev = 0
 
-d = d3dshot.create(capture_output="numpy")
+# d = d3dshot.create(capture_output="numpy", frame_buffer_size=120)
+sct = mss.mss()
 canvas = interface.ui(name="autonomous_driving")
 
-# j = joy_keyboard()
-# t = threading.Thread(target=j.iterate())
-# t.start()
+# kj = joy_keyboard()
+vj = joy_controller(1)
 
-vj = pyvjoy.VJoyDevice(1)
-vj.data.wAxisX = int(32767/2)
-vj.data.wAxisY = int(32767/2)
 
 while(1):
     st = time.time()
-    raw = d.screenshot(region=bbox)
+    # raw = d.screenshot(region=bbox)
+    # raw = ImageGrab.grab(bbox=bbox)
+    # raw = np.array(raw)
     # img = img[bbox[0]:bbox[1], bbox[2]:bbox[3],:]
     
+    sct_img = sct.grab(bbox)
+    raw = np.array(Image.frombytes('RGB', sct_img.size, sct_img.rgb))
+
     raw = cv2.cvtColor(raw, cv2.COLOR_RGB2BGR)/255
     img = cv2.resize(raw, (320,240))
     img = img[100:, :, :]
     img = cv2.resize(img, (160,120))
 
     x = model.predict(np.expand_dims(img, axis=0))[0]
-    average = 0
+    dire = 0
     for it, nyx in enumerate(x):
-        average+=nyx*dico[it]
+        dire+=nyx*dico[it]
 
-    if len(av)<5:
-        av.append(average/2)
-    else:
-        av.append(average/2)
-        del av[0]
-
+    # if len(av)<5:
+    #     av.append(dire/2)
+    # else:
+    #     av.append(dire/2)
+    #     del av[0]
     # dire = np.average(av)
-    dire = average/2
+
+    dire = dire/2
 
     c = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
-    canvas.update(screens=[raw, c])
+    canvas.stack(screens=[raw, c])
     canvas.show()
 
     et = time.time()
     dt = et-st
     
-    # t.join()
-    # j.get_key(dire, prev, dt)
-    # t = threading.Thread(target=j.iterate())
-    # t.start()
+    # kj.get_key(dire, prev, dt)
+    # kj.iterate()
     # prev = dire
     
-    vj.data.wAxisX = int(32767*(dire+1)/2)
-    vj.update()
+    vj.iterate(dire)
     
     # cv2.imwrite('test_img\\'+str(dire)+'_'+str(time.time())+'.png', img*255)
