@@ -46,7 +46,7 @@ class joy_keyboard():
             self.k = self.kdict[0]
         else:
             self.k = self.kdict[-1]
-
+        
         # self.dt = np.absolute(direct)*dt
         # self.i = int(np.absolute(direct)*10)
         
@@ -80,7 +80,8 @@ canvas = interface.ui(name="autonomous_driving")
 
 # kj = joy_keyboard()
 vj = joy_controller(1)
-
+vj.vjoyobj.data.wAxisZRot = int(32767/2)
+vj.vjoyobj.update()
 
 while(1):
     
@@ -108,14 +109,19 @@ while(1):
     # prev = dire
     
     # vj.iterate(av/2)
+    vj.vjoyobj.data.wAxisZRot = int(32767/2)
+    vj.vjoyobj.update()
+    
+    try:
+        lab_key = keyboard.read_key()
+        if len(key_av) < 5 :
+            key_av.append(lab_dico[lab_dickey.index(lab_key)])
+        else:
+            del key_av[0]
+            key_av.append(lab_dico[lab_dickey.index(lab_key)])
 
-    lab_key = keyboard.read_key()
-    if len(key_av) < 5 :
-        key_av.append(lab_dico[lab_dickey.index(lab_key)])
-    else:
-        del key_av[0]
-        key_av.append(lab_dico[lab_dickey.index(lab_key)])
+        lab = int(np.average(key_av))
+        cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(lab_dico[lab_dickey.index(lab_key)])+'_'+str(time.time())+'.png', img*255)
 
-    lab = int(np.average(key_av))
-
-    cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(lab)+'_'+str(time.time())+'.png', img*255)
+    except:
+        cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+'7'+'_'+str(time.time())+'.png', img*255)
