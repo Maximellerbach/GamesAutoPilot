@@ -66,14 +66,12 @@ class joy_controller():
         self.vjoyobj.update()
         
 
-last = 1
-av = []
 model = load_model('lightv3_mix.h5', custom_objects={"dir_loss":dir_loss})
 bbox = (0,33,514,421)
 dico=[-2,-1,0,1,2]
-average = 0
-x = [0,0,0,0,0]
-dt = 0
+lab_dico = [3, 7, 11]
+lab_dickey = ["q", "z", "d"]
+key_av = []
 prev = 0
 
 # d = d3dshot.create(capture_output="numpy", frame_buffer_size=120)
@@ -85,11 +83,6 @@ vj = joy_controller(1)
 
 
 while(1):
-    st = time.time()
-    # raw = d.screenshot(region=bbox)
-    # raw = ImageGrab.grab(bbox=bbox)
-    # raw = np.array(raw)
-    # img = img[bbox[0]:bbox[1], bbox[2]:bbox[3],:]
     
     sct_img = sct.grab(bbox)
     raw = np.array(Image.frombytes('RGB', sct_img.size, sct_img.rgb))
@@ -100,31 +93,29 @@ while(1):
     img = cv2.resize(img, (160,120))
 
     x = model.predict(np.expand_dims(img, axis=0))[0]
-    dire = 0
+    av = 0
     for it, nyx in enumerate(x):
-        dire+=nyx*dico[it]
-
-    # if len(av)<5:
-    #     av.append(dire/2)
-    # else:
-    #     av.append(dire/2)
-    #     del av[0]
-    # dire = np.average(av)
-
-    dire = dire/2
+        av+=nyx*dico[it]
+    dire = av/2
 
     c = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
     canvas.stack(screens=[raw, c])
     canvas.show()
 
-    et = time.time()
-    dt = et-st
-    
     # kj.get_key(dire, prev, dt)
     # kj.iterate()
     # prev = dire
     
-    vj.iterate(dire)
-    
-    # cv2.imwrite('test_img\\'+str(dire)+'_'+str(time.time())+'.png', img*255)
+    # vj.iterate(av/2)
+
+    lab_key = keyboard.read_key()
+    if len(key_av) < 5 :
+        key_av.append(lab_dico[lab_dickey.index(lab_key)])
+    else:
+        del key_av[0]
+        key_av.append(lab_dico[lab_dickey.index(lab_key)])
+
+    lab = int(np.average(key_av))
+
+    cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(lab)+'_'+str(time.time())+'.png', img*255)
