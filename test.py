@@ -23,7 +23,7 @@ pyautogui.FAILSAFE = False
 class joy_keyboard():
     def __init__(self):
         self.i = 0
-        self.kdict = ['q', 'r', 'z', 's']
+        self.kdict = ['left', 'right', 'up', 'down']
         self.k = self.kdict[-1]
         self.idt = 1/30
         self.dt = self.idt
@@ -32,7 +32,7 @@ class joy_keyboard():
     def iterate(self):
         pyautogui.press(self.k)
 
-    def get_key(self, direct, prev, dt):
+    def get_key(self, direct, prev):
         if prev>0:
             kp = self.kdict[1]
         elif prev<0:
@@ -66,12 +66,13 @@ class joy_controller():
         self.vjoyobj.update()
         
 
-model = load_model('lightv3_mix.h5', custom_objects={"dir_loss":dir_loss})
-bbox = (0,33,514,421)
+model = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv3_mix.h5', custom_objects={"dir_loss":dir_loss})
+bbox = (0,33,592,442+33) # 514, 387 
 dico=[-2,-1,0,1,2]
-lab_dico = [3, 7, 11]
-lab_dickey = ["q", "z", "d"]
+lab_dico = [3, 5, 7, 9, 11]
+lab_dickey = ["left", "up", "right"]
 key_av = []
+recording = False
 prev = 0
 
 # d = d3dshot.create(capture_output="numpy", frame_buffer_size=120)
@@ -80,7 +81,8 @@ canvas = interface.ui(name="autonomous_driving")
 
 # kj = joy_keyboard()
 vj = joy_controller(1)
-vj.vjoyobj.data.wAxisZRot = int(32767/2)
+# vj.vjoyobj.reset()
+vj.vjoyobj.data.wAxisZRot = 255
 vj.vjoyobj.update()
 
 while(1):
@@ -97,31 +99,41 @@ while(1):
     av = 0
     for it, nyx in enumerate(x):
         av+=nyx*dico[it]
-    dire = av/2
+    dire = av/1.25
 
     c = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
     canvas.stack(screens=[raw, c])
     canvas.show()
 
-    # kj.get_key(dire, prev, dt)
+    # kj.get_key(dire, prev)
     # kj.iterate()
     # prev = dire
-    
-    # vj.iterate(av/2)
-    vj.vjoyobj.data.wAxisZRot = int(32767/2)
-    vj.vjoyobj.update()
-    
-    try:
-        lab_key = keyboard.read_key()
-        if len(key_av) < 5 :
-            key_av.append(lab_dico[lab_dickey.index(lab_key)])
+    if keyboard.is_pressed('i'):
+        if recording == False:
+            recording = True
         else:
-            del key_av[0]
-            key_av.append(lab_dico[lab_dickey.index(lab_key)])
+            recording = False
+        print("recording: ", recording)
+        
+        time.sleep(0.5)
 
-        lab = int(np.average(key_av))
-        cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(lab_dico[lab_dickey.index(lab_key)])+'_'+str(time.time())+'.png', img*255)
+    if recording:
+        lab_keys = []
+        for k in lab_dickey:
+            lab_keys.append(keyboard.is_pressed(k))
+        lab = 0
+        wl = []
+        for it, ks in enumerate(lab_keys):
+            lab+= ks*(it*2)
+            if ks == True:
+                wl.append(ks*it*2)
 
-    except:
-        cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+'7'+'_'+str(time.time())+'.png', img*255)
+        if np.average(lab_keys) != 0:
+            mean = int(np.average(wl))
+            to_save = lab_dico[mean]
+            cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(to_save)+'_'+str(time.time())+'.png', img*255)
+    else:
+        vj.vjoyobj.data.wAxisZRot = int(32767*max(x)) 
+        vj.iterate(dire)
+        
