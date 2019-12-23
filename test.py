@@ -117,7 +117,7 @@ if __name__ == "__main__":
         av = 0
         for it, nyx in enumerate(x):
             av+=nyx*dico[it]
-        dire = av/1.25
+        dire = av/1.5
 
         c.img = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 to_save = lab_dico[mean]
                 cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(to_save)+'_'+str(time.time())+'.png', img*255)
         else:
-            vj.iterate(dire, max(x[2]))
+            vj.iterate(dire, 0)
             
             # kj.get_key(dire, prev)
             # kj.iterate()
