@@ -2,10 +2,16 @@ import cv2
 import numpy as np
 
 class screen():
+    """
+    screen class
+    """
     def __init__(self, img):
         self.img = img
 
 class ui():
+    """
+    custom class for combining multiple screens into one screen
+    """
     def __init__(self, screens=[screen(np.zeros((1,1)))], name="img", dt=1):
         self.name = name
         self.dt = dt

@@ -8,9 +8,7 @@ from tqdm import tqdm
 
 
 def take_screenshot(bbox, size=(160,90), name=0):
-    
     img = ImageGrab.grab(bbox=bbox)
-    
     img = np.array(img)
     img = cv2.resize(img,size)
 
