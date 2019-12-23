@@ -1,36 +1,46 @@
 import cv2
 import numpy as np
 
+class screen():
+    def __init__(self, img):
+        self.img = img
+
 class ui():
-    def __init__(self, name="img", dt=1):
+    def __init__(self, screens=[screen(np.zeros((1,1)))], name="img", dt=1):
         self.name = name
         self.dt = dt
+        self.screens = screens
         self.stacks = [(0, 0, 0, 0)]
 
-    def stack(self, screens=[np.zeros((512,512))], stackx=True):
-        self.screens = screens
-        self.n_screens = len(screens)
-
+    def stack(self, stackx=True, offx=0, offy=0):
         xmax = []
         ymax = []
 
         for s in self.screens:
-            ymax.append(s.shape[0])
-            xmax.append(s.shape[1])
+            ymax.append(s.img.shape[0])
+            xmax.append(s.img.shape[1])
 
-        xmax = sum(xmax)
-        ymax = max(ymax)
+        if stackx == True:
+            xmax = sum(xmax)
+            ymax = max(ymax)
+        else:
+            ymax = sum(ymax)
+            xmax = max(xmax)
 
         img = np.zeros((ymax, xmax, 3))
 
         offx = 0
+        offy = 0
+
         for s in self.screens:
-            dim = s.shape
-            img[:dim[0], offx:offx+dim[1], :] = s
+            dim = s.img.shape
+            img[offy:offy+dim[0], offx:offx+dim[1], :] = s.img
             self.stacks.append((0, dim[0], offx, offx+dim[1]))
 
             if stackx == True:
                 offx += dim[1]
+            else:
+                offy += dim[0]
 
         self.canv = img
 
