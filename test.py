@@ -78,7 +78,7 @@ class joy_controller():
 
     def iterate(self, dire, speed):
         self.vjoyobj.data.wAxisX = int(32767*(dire+1)/2)
-        self.vjoyobj.data.wAxisZRot = int(32767/2)+int(32767/2*x[2])
+        self.vjoyobj.data.wAxisZRot = int(32767/2)+int(32767/2*speed)
         self.vjoyobj.update()
         
 
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # kj = joy_keyboard()
     vj = joy_controller(1)
 
-    while(1): # controle/recording loop
+    while(1): # control/recording loop
 
         sct_img = sct.grab(bbox)
         raw.img = np.array(Image.frombytes('RGB', sct_img.size, sct_img.rgb))
@@ -149,7 +149,6 @@ if __name__ == "__main__":
                 to_save = lab_dico[mean]
                 cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(to_save)+'_'+str(time.time())+'.png', img*255)
         else:
-            vj.vjoyobj.data.wAxisZRot = int((32767/2)+(32767/2*x[2]))
             vj.iterate(dire, max(x[2]))
             
             # kj.get_key(dire, prev)
