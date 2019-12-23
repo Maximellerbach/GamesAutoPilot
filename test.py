@@ -1,23 +1,25 @@
 import math
 import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # force tensorflow/keras to use the cpu instead of gpu (already used by the game)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import threading
 import time
 
 import cv2
-import d3dshot
-from PIL import ImageGrab, Image
-import mss
 import numpy as np
-import pyautogui
+
+from PIL import Image
+import mss
+
+import pyvjoy
 import keyboard
+import pyautogui
+pyautogui.FAILSAFE = False
+
 from keras.models import load_model
 import keras.backend as K
 
 import interface
-import pyvjoy
-pyautogui.FAILSAFE = False
 
 
 def dir_loss(y_true, y_pred):
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     recording = False
     prev = 0
 
-    model = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
+    model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
     sct = mss.mss()
 
     raw = interface.screen(0)
