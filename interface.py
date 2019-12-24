@@ -5,52 +5,133 @@ class screen():
     """
     screen class
     """
-    def __init__(self, img):
+    def __init__(self, img, stackx=False):
+        """ img : bgr or rgb image """
         self.img = img
+        self.stackx = stackx
+
+class text():
+    """
+    text class
+    """
+    def __init__(self, txt, font = cv2.FONT_HERSHEY_SIMPLEX, fontsize=1, color = (255, 255, 255), stackx=False):
+        self.string = txt
+        self.font = font
+        self.fontsize = fontsize
+        self.color = color
+        self.stackx = stackx
+
+    def get_dim(self):
+        """
+        get the size of the bounding box of a given text
+        returns (y, x, margin)
+        """
+        size = cv2.getTextSize(self.string, self.font, self.fontsize, 1)
+        return size[0][1], size[0][0], size[1]
+
 
 class ui():
     """
-    custom class for combining multiple screens into one screen
+    custom class for combining multiple screens/texts into one displayed image
     """
-    def __init__(self, screens=[screen(np.zeros((1,1)))], name="img", dt=1):
+    def __init__(self, screens=[screen(np.zeros((1,1)))], texts=[text("")], name="img", dt=1):
         self.name = name
         self.dt = dt
         self.screens = screens
         self.stacks = [(0, 0, 0, 0)]
+        self.texts = texts
 
-    def stack(self, stackx=True, offx=0, offy=0):
-        xmax = []
-        ymax = []
-
-        for s in self.screens:
-            ymax.append(s.img.shape[0])
-            xmax.append(s.img.shape[1])
-
-        if stackx == True:
-            xmax = sum(xmax)
-            ymax = max(ymax)
+    def update(self):
+        if len(self.stacks)>1:
+            ymax = 0
+            xmax = 0
+            for st in self.stacks:
+                if st[1]>ymax:
+                    ymax = st[1]
+                if st[3]>xmax:
+                    xmax = st[3]
+        
         else:
-            ymax = sum(ymax)
-            xmax = max(xmax)
+            xmax = []
+            ymax = []
 
+            for s in self.screens:
+                y, x, _ = s.img.shape
+                ymax.append(y)
+                xmax.append(x)
+
+            for t in self.texts:
+                y, x, m = t.get_dim()
+                ymax.append(y+m)
+                xmax.append(x)
+
+            if len(xmax)>0 and len(ymax)>0:
+                xmax = sum(xmax)
+                ymax = sum(ymax)
+
+        self.stacks = [(0, 0, 0, 0)]
         img = np.zeros((ymax, xmax, 3))
 
-        offx = 0
-        offy = 0
-
         for s in self.screens:
-            dim = s.img.shape
-            img[offy:offy+dim[0], offx:offx+dim[1], :] = s.img
-            self.stacks.append((0, dim[0], offx, offx+dim[1]))
+            py, pyh, px, pxw = self.stacks[-1]
+            y, x, _ = s.img.shape
+                
+            if s.stackx==False:
+                if y+pyh<ymax:
+                    pxw = px
+                    py = pyh
+                else:
+                    py = 0
+                img[py:py+y, pxw:pxw+x, :] = s.img
+                self.stacks.append((py, py+y, pxw, pxw+x))
 
-            if stackx == True:
-                offx += dim[1]
             else:
-                offy += dim[0]
+                if x+pxw<xmax:
+                    pyh = py
+                    px = pxw
+                else:
+                    px = 0
+                img[pyh:pyh+y, px:px+x, :] = s.img
+                self.stacks.append((pyh, pyh+y, px, px+x))
 
+
+        for t in self.texts:
+            py, pyh, px, pxw = self.stacks[-1]
+            y, x, m = t.get_dim()
+
+            if t.stackx==False:
+                if y+pyh<ymax:
+                    pxw = px
+                    py = pyh
+                elif x+pxw<xmax:
+                    py = py
+                else:
+                    py = 0
+                cv2.putText(img, t.string, (pxw, py+y+m//2), t.font, t.fontsize, t.color)    
+                self.stacks.append((py, py+y+m, pxw, pxw+x))
+
+            else:
+                if x+pxw<xmax:
+                    pyh = py
+                    px = pxw
+                elif y+pyh<ymax:
+                    px = px
+                else:
+                    px = 0
+                cv2.putText(img, t.string, (px, pyh+y+m//2), t.font, t.fontsize, t.color)
+                self.stacks.append((pyh, pyh+y+m, px, px+x))
+        
         self.canv = img
 
     def show(self):
         cv2.imshow(self.name, self.canv)
         cv2.waitKey(self.dt)
 
+
+if __name__ == "__main__":
+    t = text("olala")
+    i = screen(np.zeros((200, 200, 3)))
+    c = ui(screens=[i], texts=[t], dt=0)
+
+    c.update()
+    c.show()

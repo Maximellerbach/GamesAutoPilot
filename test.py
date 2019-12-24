@@ -21,6 +21,11 @@ import keras.backend as K
 
 import interface
 
+def round_list(iterable, n=3):
+    rounded = []
+    for i in iterable:
+        rounded.append(round(i, n))
+    return rounded
 
 def dir_loss(y_true, y_pred):
     """
@@ -95,11 +100,15 @@ if __name__ == "__main__":
     model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
     sct = mss.mss()
 
-    raw = interface.screen(0)
-    c = interface.screen(0)
+    raw = interface.screen(0, stackx=False)
+    c = interface.screen(0, stackx=False)
 
-    canvas = interface.ui(screens=[raw, c], name="autonomous_driving")
+    pred_txt = interface.text("", fontsize=0.5, stackx=True)
+    dire_txt = interface.text("", fontsize=0.5, stackx=True)
+    key_txt = interface.text("", fontsize=0.5, stackx=False)
+    keys = [0]*3
 
+    canvas = interface.ui(screens=[raw, c], texts=[pred_txt, dire_txt, key_txt], name="autonomous_driving")
     # kj = joy_keyboard()
     vj = joy_controller(1)
 
@@ -114,14 +123,21 @@ if __name__ == "__main__":
         img = cv2.resize(img, (160,120))
 
         x = model.predict(np.expand_dims(img, axis=0))[0]
+        pred_txt.string = "predicted: "+str(round_list(x))
+
         av = 0
         for it, nyx in enumerate(x):
             av+=nyx*dico[it]
         dire = av/1.5
+        dire_txt.string = "predicted angle: "+str(round_list([dire]))
+
+        for k in lab_dickey:
+            keys[lab_dickey.index(k)] = keyboard.is_pressed(k)
+        key_txt.string = "manual steering: "+str(keys)
 
         c.img = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
-        canvas.stack()
+        canvas.update()
         canvas.show()
 
         if keyboard.is_pressed('i'): # press "i" to switch from rec/control mode
