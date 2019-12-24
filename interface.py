@@ -5,21 +5,27 @@ class screen():
     """
     screen class
     """
-    def __init__(self, img, stackx=False):
+    def __init__(self, img, stackx=False, offy=0):
         """ img : bgr or rgb image """
         self.img = img
         self.stackx = stackx
+        self.offy = offy
+
+    def paste(self, img, y, y2, x, x2):
+        img[y:y2, x:x2, :] = self.img
+        return img
 
 class text():
     """
     text class
     """
-    def __init__(self, txt, font = cv2.FONT_HERSHEY_SIMPLEX, fontsize=1, color = (255, 255, 255), stackx=False):
+    def __init__(self, txt, font = cv2.FONT_HERSHEY_SIMPLEX, fontsize=1, color = (255, 255, 255), stackx=False, offy=10):
         self.string = txt
         self.font = font
         self.fontsize = fontsize
         self.color = color
         self.stackx = stackx
+        self.offy = offy
 
     def get_dim(self):
         """
@@ -28,6 +34,9 @@ class text():
         """
         size = cv2.getTextSize(self.string, self.font, self.fontsize, 1)
         return size[0][1], size[0][0], size[1]
+    
+    def put(self, img, x, y):
+        cv2.putText(img, self.string, (x,y), self.font, self.fontsize, self.color)
 
 
 class ui():
@@ -48,12 +57,12 @@ class ui():
 
             for s in self.screens:
                 y, x, _ = s.img.shape
-                ymax.append(y)
+                ymax.append(y+s.offy)
                 xmax.append(x)
 
             for t in self.texts:
                 y, x, m = t.get_dim()
-                ymax.append(y+m)
+                ymax.append(y+m+t.offy)
                 xmax.append(x)
 
             if len(xmax)>0 and len(ymax)>0:
@@ -70,14 +79,9 @@ class ui():
             if s.stackx==False:
                 pxw = px
                 py = pyh
-                img[py:py+y, pxw:pxw+x, :] = s.img
-                self.stacks.append((py, py+y, pxw, pxw+x))
 
-            else:
-                pyh = py
-                px = pxw
-                img[pyh:pyh+y, px:px+x, :] = s.img
-                self.stacks.append((pyh, pyh+y, px, px+x))
+            img = s.paste(img, py, py+y, pxw, pxw+x)
+            self.stacks.append((py, py+y+s.offy, pxw, pxw+x))
 
 
         for t in self.texts:
@@ -87,14 +91,9 @@ class ui():
             if t.stackx==False:
                 pxw = px
                 py = pyh
-                cv2.putText(img, t.string, (pxw, py+y+m//2), t.font, t.fontsize, t.color)    
-                self.stacks.append((py, py+y+m, pxw, pxw+x))
-
-            else:
-                pyh = py
-                px = pxw
-                cv2.putText(img, t.string, (px, pyh+y+m//2), t.font, t.fontsize, t.color)
-                self.stacks.append((pyh, pyh+y+m, px, px+x))
+            
+            t.put(img, pxw, py+y+m//2)
+            self.stacks.append((py, py+y+m+t.offy, pxw, pxw+x))
         
         ymax = 0
         xmax = 0

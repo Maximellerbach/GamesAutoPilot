@@ -103,12 +103,16 @@ if __name__ == "__main__":
     raw = interface.screen(0, stackx=False)
     c = interface.screen(0, stackx=False)
 
-    pred_txt = interface.text("", fontsize=0.5, stackx=True)
-    dire_txt = interface.text("", fontsize=0.5, stackx=False)
-    key_txt = interface.text("", fontsize=0.5, stackx=False)
+    font = cv2.FONT_HERSHEY_COMPLEX
+
+    pred_txt = interface.text("", font=font, fontsize=0.5, stackx=True)
+    dire_txt = interface.text("", font=font, fontsize=0.5, stackx=False)
+    key_txt = interface.text("", font=font, fontsize=0.5, stackx=False)
+    autonomous_txt = interface.text("", font=font, fontsize=0.5, stackx=False)
+
     keys = [0]*3
 
-    canvas = interface.ui(screens=[raw, c], texts=[pred_txt, dire_txt, key_txt], name="autonomous_driving")
+    canvas = interface.ui(screens=[raw, c], texts=[pred_txt, dire_txt, key_txt, autonomous_txt], name="autonomous_driving")
     # kj = joy_keyboard()
     vj = joy_controller(1)
 
@@ -134,6 +138,7 @@ if __name__ == "__main__":
         for k in lab_dickey:
             keys[lab_dickey.index(k)] = keyboard.is_pressed(k)
         key_txt.string = "manual steering: "+str(keys)
+        autonomous_txt.string = "autonomous: "+str(not(any(keys)==True))
 
         c.img = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
@@ -146,7 +151,6 @@ if __name__ == "__main__":
             else:
                 recording = False
             print("recording: ", recording)
-            
             time.sleep(0.5)
 
         if recording:
@@ -165,7 +169,10 @@ if __name__ == "__main__":
                 to_save = lab_dico[mean]
                 cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(to_save)+'_'+str(time.time())+'.png', img*255)
         else:
-            vj.iterate(dire, 0)
+            if any(keys)==True:
+                vj.iterate(0, 0)
+            else:
+                vj.iterate(dire, 0)
             
             # kj.get_key(dire, prev)
             # kj.iterate()
