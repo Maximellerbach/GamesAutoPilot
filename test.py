@@ -104,7 +104,7 @@ if __name__ == "__main__":
     c = interface.screen(0, stackx=False)
 
     pred_txt = interface.text("", fontsize=0.5, stackx=True)
-    dire_txt = interface.text("", fontsize=0.5, stackx=True)
+    dire_txt = interface.text("", fontsize=0.5, stackx=False)
     key_txt = interface.text("", fontsize=0.5, stackx=False)
     keys = [0]*3
 

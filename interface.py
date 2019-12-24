@@ -42,16 +42,7 @@ class ui():
         self.texts = texts
 
     def update(self):
-        if len(self.stacks)>1:
-            ymax = 0
-            xmax = 0
-            for st in self.stacks:
-                if st[1]>ymax:
-                    ymax = st[1]
-                if st[3]>xmax:
-                    xmax = st[3]
-        
-        else:
+        if len(self.stacks)>0:
             xmax = []
             ymax = []
 
@@ -77,20 +68,14 @@ class ui():
             y, x, _ = s.img.shape
                 
             if s.stackx==False:
-                if y+pyh<ymax:
-                    pxw = px
-                    py = pyh
-                else:
-                    py = 0
+                pxw = px
+                py = pyh
                 img[py:py+y, pxw:pxw+x, :] = s.img
                 self.stacks.append((py, py+y, pxw, pxw+x))
 
             else:
-                if x+pxw<xmax:
-                    pyh = py
-                    px = pxw
-                else:
-                    px = 0
+                pyh = py
+                px = pxw
                 img[pyh:pyh+y, px:px+x, :] = s.img
                 self.stacks.append((pyh, pyh+y, px, px+x))
 
@@ -100,28 +85,26 @@ class ui():
             y, x, m = t.get_dim()
 
             if t.stackx==False:
-                if y+pyh<ymax:
-                    pxw = px
-                    py = pyh
-                elif x+pxw<xmax:
-                    py = py
-                else:
-                    py = 0
+                pxw = px
+                py = pyh
                 cv2.putText(img, t.string, (pxw, py+y+m//2), t.font, t.fontsize, t.color)    
                 self.stacks.append((py, py+y+m, pxw, pxw+x))
 
             else:
-                if x+pxw<xmax:
-                    pyh = py
-                    px = pxw
-                elif y+pyh<ymax:
-                    px = px
-                else:
-                    px = 0
+                pyh = py
+                px = pxw
                 cv2.putText(img, t.string, (px, pyh+y+m//2), t.font, t.fontsize, t.color)
                 self.stacks.append((pyh, pyh+y+m, px, px+x))
         
-        self.canv = img
+        ymax = 0
+        xmax = 0
+        for st in self.stacks:
+            if st[1]>ymax:
+                ymax = st[1]
+            if st[3]>xmax:
+                xmax = st[3]
+
+        self.canv = img[:ymax, :xmax, :]
 
     def show(self):
         cv2.imshow(self.name, self.canv)
