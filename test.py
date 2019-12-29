@@ -20,6 +20,7 @@ from keras.models import load_model
 import keras.backend as K
 
 import interface
+import autolib
 
 def round_list(iterable, n=3):
     rounded = []
@@ -95,9 +96,11 @@ if __name__ == "__main__":
     lab_dickey = ["left", "up", "right"] # keys to be listen when recording
 
     recording = False
+    avlist = []
+    memory_size = 30
     prev = 0
 
-    model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
+    model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv5_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
     sct = mss.mss()
 
     raw = interface.screen(0, stackx=False)
@@ -125,7 +128,16 @@ if __name__ == "__main__":
         img = cv2.resize(raw.img, (320,240))
         img = img[100:, :, :]
         img = cv2.resize(img, (160,120))
-
+        
+        '''
+        filled = [[0, 0.125, 0.75, 0.125, 0]]*(memory_size-len(avlist))+avlist
+        x = model.predict([np.expand_dims(img, axis=0), np.expand_dims(filled, axis=0)])[0]
+        if len(avlist)<memory_size:
+            avlist.append(x)
+        else:
+            avlist.append(x)
+            del avlist[0]
+        '''
         x = model.predict(np.expand_dims(img, axis=0))[0]
         pred_txt.string = "predicted: "+str(round_list(x))
 
@@ -172,7 +184,7 @@ if __name__ == "__main__":
             if any(keys)==True:
                 vj.iterate(0, 0)
             else:
-                vj.iterate(dire, 0)
+                vj.iterate(dire, 0) # max(x[1:3])
             
             # kj.get_key(dire, prev)
             # kj.iterate()
