@@ -18,6 +18,7 @@ pyautogui.FAILSAFE = False
 
 from keras.models import load_model
 import keras.backend as K
+from keras.losses import mse
 
 import interface
 import autolib
@@ -27,15 +28,6 @@ def round_list(iterable, n=3):
     for i in iterable:
         rounded.append(round(i, n))
     return rounded
-
-def dir_loss(y_true, y_pred):
-    """
-    custom loss function for the models 
-    (only use if you have the same models as me)
-    """
-    # return K.sqrt(K.square(y_true-y_pred))
-    return K.sqrt(K.square(y_true-y_pred))
-
 
 class joy_keyboard():
     """
@@ -50,7 +42,9 @@ class joy_keyboard():
         self.pred = 0
 
     def iterate(self):
-        pyautogui.press(self.k)
+        pyautogui.keyDown(self.k)
+        time.sleep(0.1)
+        pyautogui.keyUp(self.k)
 
     def get_key(self, direct, prev):
         if prev>0:
@@ -89,9 +83,10 @@ class joy_controller():
         
 
 if __name__ == "__main__":
-    bbox = (0,33,800,450+33) # set here the coordinates of your game/screen to capture
+    bbox = (0,33,800,450+33) # (0,33,1024,768+33) # set here the coordinates of your game/screen to capture
 
-    dico=[-2,-1,0,1,2]
+    aggressive_coef = 0.5
+    dico=[-2, -1, 0, 1, 2] # adjust for a custom driving sensivity
     lab_dico = [3, 5, 7, 9, 11]
     lab_dickey = ["left", "up", "right"] # keys to be listen when recording
 
@@ -100,7 +95,7 @@ if __name__ == "__main__":
     memory_size = 30
     prev = 0
 
-    model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv5_mix.h5', custom_objects={"dir_loss":dir_loss}) # set here your path tou your model
+    model = load_model('C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\convolution\\lightv6_mix.h5', compile=False) # set here your path tou your model
     sct = mss.mss()
 
     raw = interface.screen(0, stackx=False)
@@ -144,7 +139,12 @@ if __name__ == "__main__":
         av = 0
         for it, nyx in enumerate(x):
             av+=nyx*dico[it]
-        dire = av/1.5
+        
+        if av>=0:
+            dire = av**aggressive_coef
+        else:
+            dire = -np.absolute(av)**aggressive_coef
+        
         dire_txt.string = "predicted angle: "+str(round_list([dire]))
 
         for k in lab_dickey:
@@ -154,8 +154,8 @@ if __name__ == "__main__":
 
         c.img = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
-        canvas.update()
-        canvas.show()
+        
+        ### 
 
         if keyboard.is_pressed('i'): # press "i" to switch from rec/control mode
             if recording == False:
@@ -189,4 +189,7 @@ if __name__ == "__main__":
             # kj.get_key(dire, prev)
             # kj.iterate()
             # prev = dire
+
+        canvas.update()
+        canvas.show(factor=(1,1))
         

@@ -105,8 +105,10 @@ class ui():
 
         self.canv = img[:ymax, :xmax, :]
 
-    def show(self):
-        cv2.imshow(self.name, self.canv)
+    def show(self, factor=(1,1)):
+        h, w, _ = self.canv.shape
+        img = cv2.resize(self.canv, (int(w*factor[0]), int(h*factor[1])))
+        cv2.imshow(self.name, img)
         cv2.waitKey(self.dt)
 
 
