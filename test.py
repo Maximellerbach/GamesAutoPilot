@@ -1,27 +1,30 @@
 import math
 import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" # force tensorflow/keras to use the cpu instead of gpu (already used by the game)
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import threading
 import time
 
 import cv2
-import numpy as np
-
-from PIL import Image
-import mss
-
-import pyvjoy
-import keyboard
-import pyautogui
-pyautogui.FAILSAFE = False
-
-from keras.models import load_model
 import keras.backend as K
+import keyboard
+import mss
+import numpy as np
+import pyautogui
+import pyvjoy
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 from keras.losses import mse
+from keras.models import load_model
+from PIL import Image
 
 import interface
-import autolib
+
+pyautogui.FAILSAFE = False
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True # dynamically grow the memory used on the GPU
+sess = tf.Session(config=config)
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+set_session(sess) # set this TensorFlow session as the default
 
 def round_list(iterable, n=3):
     rounded = []
@@ -192,4 +195,3 @@ if __name__ == "__main__":
 
         canvas.update()
         canvas.show(factor=(1,1))
-        
