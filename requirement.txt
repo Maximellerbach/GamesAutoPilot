@@ -1,0 +1,9 @@
+tensorflow
+keras
+h5py
+numpy
+pyautogui
+keyboard
+mss
+pillow
+opencv-python
