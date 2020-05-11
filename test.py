@@ -133,6 +133,16 @@ if __name__ == "__main__":
 
         c.img = cv2.line(np.copy(img), (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+dire*30), img.shape[0]-50), color=[1, 0, 0], thickness=4)
 
+        if any(keys)==True:
+            vj.iterate(0, 0)
+        else:
+            vj.iterate(dire, 0)
+        
+        # kj.get_key(dire, prev)
+        # kj.iterate()
+        # prev = dire
+
+
         canvas.update()
         canvas.show(factor=(1,1))
         
@@ -161,14 +171,5 @@ if __name__ == "__main__":
                 mean = int(np.average(wl))
                 to_save = lab_dico[mean]
                 cv2.imwrite('C:\\Users\\maxim\\img_trackmania\\'+str(to_save)+'_'+str(time.time())+'.png', img*255)
-
-        else:
-            if any(keys)==True:
-                vj.iterate(0, 0)
-            else:
-                vj.iterate(dire, 0) # max(x[1:3])
-            
-            # kj.get_key(dire, prev)
-            # kj.iterate()
-            # prev = dire
         '''
+        
