@@ -123,8 +123,13 @@ if __name__ == "__main__":
         img = img[100:, :, :]
         img = cv2.resize(img, (160,120))
         
-        dire = model.predict(np.expand_dims(img, axis=0))[0]
-        pred_txt.string = "predicted: "+str(round_list(dire))
+        dire = model.predict(np.expand_dims(img, axis=0))[0][0]
+        if dire<0:
+            dire = -(np.absolute(dire)**0.5)
+        else:
+            dire = dire**0.5
+
+        pred_txt.string = "predicted: "+str(dire)
 
         for k in lab_dictkey:
             keys[lab_dictkey.index(k)] = keyboard.is_pressed(k)
