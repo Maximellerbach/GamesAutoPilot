@@ -127,7 +127,7 @@ if __name__ == "__main__":
         pred_txt.string = "predicted: "+str(round_list(dire))
 
         for k in lab_dictkey:
-            keys[lab_dickey.index(k)] = keyboard.is_pressed(k)
+            keys[lab_dictkey.index(k)] = keyboard.is_pressed(k)
         key_txt.string = "manual steering: "+str(keys)
         autonomous_txt.string = "autonomous: "+str(not(any(keys)==True))
 
