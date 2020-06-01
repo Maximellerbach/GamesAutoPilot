@@ -1,7 +1,7 @@
 # GamesAutoPilot
 autopilot using my autonomous car CNN for games like Forza or trackmania
 
-first in order the required packages: "pip install -r requirement.txt"
+first in order to download the required packages: "pip install -r requirement.txt"
 
 in order to use vjoy, you must install it:
 http://vjoystick.sourceforge.net/joomla/index.php/download-a-install
